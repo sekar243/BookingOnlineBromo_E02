@@ -43,15 +43,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Konfigurasi Database-backed Session Store
-const isTiDB = (process.env.DB_HOST && process.env.DB_HOST.includes('tidbcloud.com'));
-const sessionStore = new MySQLStore({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASS || '',
-  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306,
-  database: process.env.DB_NAME || 'booking_bromo',
-  ssl: (process.env.DB_SSL === 'true' || isTiDB) ? { rejectUnauthorized: true } : null
-});
+const sessionStore = new MySQLStore({}, db.getPool());
 
 // Konfigurasi Session
 app.use(session({

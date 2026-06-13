@@ -11,13 +11,20 @@ const dbConfig = {
   ssl: (process.env.DB_SSL === 'true' || isTiDB) ? { rejectUnauthorized: true } : null
 };
 
-let pool;
+const dbName = process.env.DB_NAME || 'booking_bromo';
+
+const pool = mysql.createPool({
+  ...dbConfig,
+  database: dbName,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
+
 let initError = null;
 
 async function initDB() {
   try {
-    const dbName = process.env.DB_NAME || 'booking_bromo';
-
     // 1. Koneksi awal ke MySQL Server untuk memastikan DB ada (hanya jika bukan TiDB)
     if (!isTiDB) {
       try {
@@ -29,21 +36,12 @@ async function initDB() {
       }
     }
 
-    // 2. Buat pool koneksi ke database yang ditargetkan
-    pool = mysql.createPool({
-      ...dbConfig,
-      database: dbName,
-      waitForConnections: true,
-      connectionLimit: 10,
-      queueLimit: 0
-    });
-
     console.log(`Terhubung ke database MySQL: ${dbName}`);
 
-    // 3. Buat tabel-tabel jika belum ada
+    // 2. Buat tabel-tabel jika belum ada
     await createTables();
 
-    // 4. Masukkan data default (seeding)
+    // 3. Masukkan data default (seeding)
     await seedData();
 
     initError = null;
