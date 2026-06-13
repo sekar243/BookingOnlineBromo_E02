@@ -12,6 +12,7 @@ const dbConfig = {
 };
 
 let pool;
+let initError = null;
 
 async function initDB() {
   try {
@@ -45,9 +46,10 @@ async function initDB() {
     // 4. Masukkan data default (seeding)
     await seedData();
 
+    initError = null;
   } catch (error) {
     console.error('Gagal menginisialisasi database:', error);
-    process.exit(1);
+    initError = error; // Simpan error, jangan exit(1) agar serverless function Vercel tidak crash saat startup
   }
 }
 
@@ -167,6 +169,12 @@ async function seedData() {
 }
 
 function query(sql, params) {
+  if (initError) {
+    throw new Error(`Database gagal diinisialisasi: ${initError.message}`);
+  }
+  if (!pool) {
+    throw new Error('Database pool belum siap.');
+  }
   return pool.query(sql, params);
 }
 
