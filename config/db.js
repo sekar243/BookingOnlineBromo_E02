@@ -1,37 +1,43 @@
 const mysql = require('mysql2/promise');
 require('dotenv').config();
 
+const isTiDB = (process.env.DB_HOST && process.env.DB_HOST.includes('tidbcloud.com'));
+
 const dbConfig = {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASS || '',
   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306,
-  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: true } : null
+  ssl: (process.env.DB_SSL === 'true' || isTiDB) ? { rejectUnauthorized: true } : null
 };
 
 let pool;
 
 async function initDB() {
   try {
-    // 1. Koneksi awal ke MySQL Server untuk memastikan DB ada
-    try {
-      const connection = await mysql.createConnection(dbConfig);
-      await connection.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'booking_bromo'}\``);
-      await connection.end();
-    } catch (dbCreateError) {
-      console.warn('Warning: Gagal membuat database otomatis (mungkin database sudah ada atau akses dibatasi):', dbCreateError.message);
+    const dbName = process.env.DB_NAME || 'booking_bromo';
+
+    // 1. Koneksi awal ke MySQL Server untuk memastikan DB ada (hanya jika bukan TiDB)
+    if (!isTiDB) {
+      try {
+        const connection = await mysql.createConnection(dbConfig);
+        await connection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
+        await connection.end();
+      } catch (dbCreateError) {
+        console.warn('Warning: Gagal membuat database otomatis:', dbCreateError.message);
+      }
     }
 
     // 2. Buat pool koneksi ke database yang ditargetkan
     pool = mysql.createPool({
       ...dbConfig,
-      database: process.env.DB_NAME || 'booking_bromo',
+      database: dbName,
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0
     });
 
-    console.log(`Terhubung ke database MySQL: ${process.env.DB_NAME || 'booking_bromo'}`);
+    console.log(`Terhubung ke database MySQL: ${dbName}`);
 
     // 3. Buat tabel-tabel jika belum ada
     await createTables();

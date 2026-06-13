@@ -10,7 +10,7 @@ class PackageController {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).send('Terjadi kesalahan saat memuat paket wisata.');
+      res.status(500).send(`Terjadi kesalahan saat memuat paket wisata: ${error.message}`);
     }
   }
 
