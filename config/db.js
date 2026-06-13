@@ -41,7 +41,7 @@ async function initDB() {
 
     // 3. Buat tabel-tabel jika belum ada
     await createTables();
-    
+
     // 4. Masukkan data default (seeding)
     await seedData();
 
