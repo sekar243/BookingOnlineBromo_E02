@@ -167,12 +167,6 @@ async function seedData() {
 }
 
 function query(sql, params) {
-  if (initError) {
-    throw new Error(`Database gagal diinisialisasi: ${initError.message}`);
-  }
-  if (!pool) {
-    throw new Error('Database pool belum siap.');
-  }
   return pool.query(sql, params);
 }
 
