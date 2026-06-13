@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
 const path = require('path');
 const dotenv = require('dotenv');
 const fs = require('fs');
@@ -41,9 +42,22 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Dukungan routing upload langsung jika tidak termuat dari public
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
+// Konfigurasi Database-backed Session Store
+const isTiDB = (process.env.DB_HOST && process.env.DB_HOST.includes('tidbcloud.com'));
+const sessionStore = new MySQLStore({
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASS || '',
+  port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306,
+  database: process.env.DB_NAME || 'booking_bromo',
+  ssl: (process.env.DB_SSL === 'true' || isTiDB) ? { rejectUnauthorized: true } : null
+});
+
 // Konfigurasi Session
 app.use(session({
+  key: 'booking_bromo_sid',
   secret: process.env.SESSION_SECRET || 'secret_key_bromo_123',
+  store: sessionStore,
   resave: false,
   saveUninitialized: false,
   cookie: {
