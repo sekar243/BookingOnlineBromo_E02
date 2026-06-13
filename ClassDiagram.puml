@@ -1,0 +1,69 @@
+@startuml
+
+class User {
+  + int id
+  + string username
+  + string email
+  + string password
+  + string phone  
+  + string role
+  + date created_at
+
+  + register(data)
+  + login(username, password)
+  + getProfile(id)
+}
+
+class Package {
+  + int id
+  + string name
+  + string description
+  + double price_per_person
+  + string image_url
+  + date created_at
+
+  + createPackage(data)
+  + updatePackage(id, data)
+  + deletePackage(id)
+  + getAllPackages()
+  + getPackageById(id)
+}
+
+class Booking {
+  + int id
+  + int user_id
+  + int package_id
+  + date booking_date
+  + date travel_date
+  + int total_participants
+  + double total_price
+  + string status
+  + timestamp booking_date
+  + date created_at
+
+  + createBooking(data)
+  + cancelBooking(id)
+  + updateStatus(id, newStatus)
+  + getBookingsByUser(userId)
+  + getAllBookings()
+}
+
+class Payment {
+  + int id
+  + int booking_id
+  + double amount_paid
+  + string bank_name
+  + string account_holder
+  + string payment_proof_url
+  + string status
+  + date created_at
+
+  + uploadProof(data)
+  + verifyPayment(id, status)
+}
+
+User "1" -- "0..*" Booking : makes
+Package "1" o-- "0..*" Booking : booked_in
+Booking "1" *-- "0..1" Payment : has
+
+@enduml
