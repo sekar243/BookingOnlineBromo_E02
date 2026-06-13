@@ -1,8 +1,7 @@
 const BookingModel = require('../models/BookingModel');
 const PackageModel = require('../models/PackageModel');
 const PaymentModel = require('../models/PaymentModel');
-const fs = require('fs');
-const path = require('path');
+const { cloudinary } = require('../config/cloudinary');
 
 class AdminController {
   static async renderDashboard(req, res) {
@@ -96,11 +95,12 @@ class AdminController {
     const { name, description, price_per_person } = req.body;
     try {
       if (!name || !description || !price_per_person || !req.file) {
-        if (req.file) fs.unlinkSync(req.file.path);
+        if (req.file && req.file.filename) await cloudinary.uploader.destroy(req.file.filename);
         return res.redirect('/admin/packages?error=Semua+field+termasuk+gambar+paket+harus+diisi.');
       }
 
-      const imageUrl = `/uploads/${req.file.filename}`;
+      // Cloudinary mengembalikan URL publik di req.file.path
+      const imageUrl = req.file.path;
       await PackageModel.create({
         name,
         description,
@@ -111,7 +111,7 @@ class AdminController {
       res.redirect('/admin/packages?success=Paket+wisata+berhasil+ditambahkan.');
     } catch (error) {
       console.error(error);
-      if (req.file) fs.unlinkSync(req.file.path);
+      if (req.file && req.file.filename) await cloudinary.uploader.destroy(req.file.filename);
       res.redirect('/admin/packages?error=Gagal+menambahkan+paket+wisata.');
     }
   }
@@ -121,7 +121,7 @@ class AdminController {
     const { name, description, price_per_person } = req.body;
     try {
       if (!name || !description || !price_per_person) {
-        if (req.file) fs.unlinkSync(req.file.path);
+        if (req.file && req.file.filename) await cloudinary.uploader.destroy(req.file.filename);
         return res.redirect('/admin/packages?error=Nama,+deskripsi,+dan+harga+harus+diisi.');
       }
 
@@ -132,23 +132,15 @@ class AdminController {
       };
 
       if (req.file) {
-        updateData.image_url = `/uploads/${req.file.filename}`;
-        
-        // Hapus gambar lama jika ada
-        const oldPkg = await PackageModel.findById(id);
-        if (oldPkg && oldPkg.image_url && oldPkg.image_url.startsWith('/uploads/')) {
-          const oldFilePath = path.join(__dirname, '../public', oldPkg.image_url);
-          if (fs.existsSync(oldFilePath)) {
-            fs.unlinkSync(oldFilePath);
-          }
-        }
+        // Cloudinary mengembalikan URL publik di req.file.path
+        updateData.image_url = req.file.path;
       }
 
       await PackageModel.update(id, updateData);
       res.redirect('/admin/packages?success=Paket+wisata+berhasil+diperbarui.');
     } catch (error) {
       console.error(error);
-      if (req.file) fs.unlinkSync(req.file.path);
+      if (req.file && req.file.filename) await cloudinary.uploader.destroy(req.file.filename);
       res.redirect('/admin/packages?error=Gagal+memperbarui+paket+wisata.');
     }
   }

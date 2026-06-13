@@ -1,8 +1,7 @@
 const BookingModel = require('../models/BookingModel');
 const PackageModel = require('../models/PackageModel');
 const PaymentModel = require('../models/PaymentModel');
-const fs = require('fs');
-const path = require('path');
+const { cloudinary } = require('../config/cloudinary');
 
 class BookingController {
   static async renderBookingForm(req, res) {
@@ -82,24 +81,25 @@ class BookingController {
       }
 
       if (!booking_id || !amount_paid || !bank_name || !account_holder) {
-        // Hapus file jika upload form tidak valid
-        fs.unlinkSync(req.file.path);
+        // Hapus file dari Cloudinary jika form tidak valid
+        if (req.file.filename) await cloudinary.uploader.destroy(req.file.filename);
         return res.redirect('/booking/history?error=Mohon+lengkapi+seluruh+data+form+bukti+transfer.');
       }
 
       const booking = await BookingModel.findById(booking_id);
       if (!booking) {
-        fs.unlinkSync(req.file.path);
+        if (req.file.filename) await cloudinary.uploader.destroy(req.file.filename);
         return res.redirect('/booking/history?error=Transaksi+pemesanan+tidak+ditemukan.');
       }
 
       // Pastikan booking ini milik user yang login
       if (booking.user_id !== req.session.user.id) {
-        fs.unlinkSync(req.file.path);
+        if (req.file.filename) await cloudinary.uploader.destroy(req.file.filename);
         return res.redirect('/booking/history?error=Akses+ditolak.');
       }
 
-      const paymentProofUrl = `/uploads/${req.file.filename}`;
+      // Cloudinary mengembalikan URL publik di req.file.path
+      const paymentProofUrl = req.file.path;
 
       // Simpan pembayaran
       await PaymentModel.create({
@@ -116,9 +116,6 @@ class BookingController {
       res.redirect('/booking/history?success=Bukti+pembayaran+berhasil+diunggah.+Harap+tunggu+konfirmasi+admin.');
     } catch (error) {
       console.error(error);
-      if (req.file) {
-        fs.unlinkSync(req.file.path);
-      }
       res.redirect('/booking/history?error=Terjadi+kesalahan+saat+mengunggah+bukti.');
     }
   }
