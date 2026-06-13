@@ -82,7 +82,25 @@ app.use((req, res, next) => {
 // Penanganan Error Global
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send(`Terjadi kesalahan internal pada server: ${err.message}<br><pre>${err.stack}</pre>`);
+  
+  let extraDiag = "";
+  if (err.message && (err.message.includes("Signature") || err.message.includes("api_key") || err.message.includes("cloud_name") || err.message.includes("secret"))) {
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+    
+    extraDiag = `\n\n--- Cloudinary Diagnosis ---\n` +
+      `CLOUDINARY_CLOUD_NAME: ${cloudName ? `Loaded (Length: ${cloudName.length}, First 3: ${cloudName.substring(0, 3)}, Last 3: ${cloudName.substring(cloudName.length - 3)})` : "NOT LOADED"}\n` +
+      `CLOUDINARY_API_KEY: ${apiKey ? `Loaded (Length: ${apiKey.length}, First 3: ${apiKey.substring(0, 3)}, Last 3: ${apiKey.substring(apiKey.length - 3)})` : "NOT LOADED"}\n` +
+      `CLOUDINARY_API_SECRET: ${apiSecret ? `Loaded (Length: ${apiSecret.length}, First 3: ${apiSecret.substring(0, 3)}, Last 3: ${apiSecret.substring(apiSecret.length - 3)})` : "NOT LOADED"}\n` +
+      `----------------------------\n` +
+      `Tips:\n` +
+      `1. Pastikan Anda sudah menambahkan variabel di Vercel Dashboard -> Settings -> Environment Variables.\n` +
+      `2. Kredensial tidak akan terbaca sampai Anda melakukan REDEPLOY di Vercel setelah menyimpannya.\n` +
+      `3. Periksa apakah ada spasi tambahan atau tanda petik di nilai variabel tersebut.`;
+  }
+  
+  res.status(500).send(`Terjadi kesalahan internal pada server: ${err.message}${extraDiag ? `<br><pre>${extraDiag}</pre>` : ""}<br><pre>${err.stack}</pre>`);
 });
 
 // Jalankan Server
