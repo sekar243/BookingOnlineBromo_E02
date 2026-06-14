@@ -120,3 +120,29 @@ ProjekKelompok/
 ├── README.md            # Dokumentasi petunjuk
 └── server.js            # Entry point aplikasi
 ```
+
+## Tampilan Aplikasi
+
+![Home](home.jpeg)
+
+![Home](Kelebihan_aplikasi.jpeg)
+
+![Pilih Paket](PilihPaket.jpeg)
+
+![Sport Utama Bromo](Sport_utama.jpeg)
+
+![Login](halaman_login.jpeg)
+
+![Registrasi](halam_registrasi.jpeg)
+
+![Dashboard Admin](Dashboard_admin.jpeg)
+
+![Kelola Paket Admin](admin_kelola_paket.jpeg)
+
+![Fitur Detail Paket](fitur_detail_paket.jpeg)
+
+![Fitur Pemesanan Tiket](fitur_pemesanan_tiket.jpeg)
+
+![Fitur Riwayat Pemesanan Tiket](fitur_riwayat_pemesanan_tiket.jpeg)
+
+![Fitur Pembayaran](fitur_pembayaran.jpeg)
